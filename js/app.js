@@ -88,18 +88,17 @@ async function loadCargos() {
   });
 }
 
-// ---------- Dica rápida (página inicial) ----------
+// ---------- Conceito rápido (página inicial) ----------
 async function loadTips() {
   const { data, error } = await supabase
-    .from('questoes')
-    .select('explicacao, materias(nome)')
-    .not('explicacao', 'is', null);
+    .from('conceitos')
+    .select('titulo, texto, materias(nome), cargos(nome)');
 
   if (error) {
-    console.error('Erro ao carregar dicas', error);
+    console.error('Erro ao carregar conceitos', error);
     return;
   }
-  tips = (data || []).filter((t) => t.explicacao && t.explicacao.trim());
+  tips = data || [];
   showRandomTip();
 }
 
@@ -110,8 +109,11 @@ function showRandomTip() {
   lastTipIndex = i;
 
   const tip = tips[i];
-  el('tip-materia').textContent = tip.materias?.nome || '';
-  el('tip-text').textContent = tip.explicacao;
+  const materiaNome = tip.materias?.nome || '';
+  const cargoNome = tip.cargos?.nome;
+  el('tip-materia').textContent = cargoNome ? `${materiaNome} · ${cargoNome}` : materiaNome;
+  el('tip-titulo').textContent = tip.titulo;
+  el('tip-text').textContent = tip.texto;
 }
 
 el('tip-refresh').addEventListener('click', showRandomTip);
