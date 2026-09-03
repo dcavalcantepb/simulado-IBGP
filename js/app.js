@@ -10,6 +10,8 @@ let questions = [];
 let currentIndex = 0;
 let tentativaId = null;
 let quizInProgress = false;
+let tips = [];
+let lastTipIndex = -1;
 
 const el = (id) => document.getElementById(id);
 
@@ -17,6 +19,7 @@ const el = (id) => document.getElementById(id);
 initTheme();
 initAuth();
 loadCargos();
+loadTips();
 route();
 
 document.addEventListener('simulado:route', route);
@@ -84,6 +87,34 @@ async function loadCargos() {
     select.appendChild(opt);
   });
 }
+
+// ---------- Dica rápida (página inicial) ----------
+async function loadTips() {
+  const { data, error } = await supabase
+    .from('questoes')
+    .select('explicacao, materias(nome)')
+    .not('explicacao', 'is', null);
+
+  if (error) {
+    console.error('Erro ao carregar dicas', error);
+    return;
+  }
+  tips = (data || []).filter((t) => t.explicacao && t.explicacao.trim());
+  showRandomTip();
+}
+
+function showRandomTip() {
+  if (tips.length === 0) return;
+  let i = Math.floor(Math.random() * tips.length);
+  if (tips.length > 1 && i === lastTipIndex) i = (i + 1) % tips.length;
+  lastTipIndex = i;
+
+  const tip = tips[i];
+  el('tip-materia').textContent = tip.materias?.nome || '';
+  el('tip-text').textContent = tip.explicacao;
+}
+
+el('tip-refresh').addEventListener('click', showRandomTip);
 
 // ---------- Setup screen ----------
 function showSetup() {
